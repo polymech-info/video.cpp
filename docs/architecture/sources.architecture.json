@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "pm-video sources",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [1180, 520],
+    "views": [
+      { "id": "webcam", "label": "Webcam", "focus": ["devices", "input", "frame"], "note": "VideoInput negotiates a mode and delivers BGR24 or MJPEG on a capture thread." },
+      { "id": "vcam", "label": "Virtual camera", "focus": ["frame", "sink", "shm", "dll", "apps"], "note": "The sink writes NV12 into a file-backed double buffer. The Frame Server DLL reads it from another process." }
+    ]
+  },
+  "components": [
+    { "id": "devices", "type": "external", "label": "Webcam", "sublabel": "friendly name or id", "pos": [30, 200], "size": [160, 64] },
+    { "id": "input", "type": "backend", "label": "VideoInput", "sublabel": "MF · V4L2 · AVFoundation", "pos": [250, 200], "size": [180, 64] },
+    { "id": "frame", "type": "backend", "label": "VideoFrame", "sublabel": "BGR24 or MJPEG", "pos": [490, 200], "size": [160, 64] },
+    { "id": "screen", "type": "backend", "label": "Screen capture", "sublabel": "GDI · PrintWindow", "pos": [490, 40], "size": [180, 60] },
+    { "id": "sink", "type": "backend", "label": "VcamSink", "sublabel": "BGR to NV12", "pos": [720, 200], "size": [150, 64] },
+    { "id": "shm", "type": "database", "label": "VCM2 file", "sublabel": "two NV12 slots", "tag": "vcam.frames", "pos": [940, 80], "size": [170, 60] },
+    { "id": "dll", "type": "external", "label": "tanit_vcam_source.dll", "sublabel": "Frame Server source", "pos": [940, 240], "size": [190, 60] },
+    { "id": "apps", "type": "external", "label": "Other apps", "sublabel": "Zoom and the rest", "pos": [940, 400], "size": [170, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "pm-video-lib", "wraps": ["input", "frame", "screen", "sink"] }
+  ],
+  "connections": [
+    { "id": "dev-input", "from": "devices", "to": "input", "label": "open", "variant": "emphasis" },
+    { "id": "input-frame", "from": "input", "to": "frame", "label": "on_frame", "variant": "emphasis" },
+    { "id": "screen-frame", "from": "screen", "to": "frame", "fromSide": "bottom", "toSide": "top", "label": "frames", "variant": "dashed" },
+    { "id": "frame-sink", "from": "frame", "to": "sink", "label": "push" },
+    { "id": "sink-shm", "from": "sink", "to": "shm", "label": "publish slot" },
+    { "id": "dll-shm", "from": "dll", "to": "shm", "fromSide": "top", "toSide": "bottom", "label": "read", "variant": "dashed" },
+    { "id": "apps-dll", "from": "apps", "to": "dll", "fromSide": "top", "toSide": "bottom", "label": "camera" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "One capture thread", "items": ["start() owns the thread. on_frame must not block. stop() joins it. Empty device name opens the first camera."] },
+    { "dot": "violet", "title": "VCM2", "items": ["The writer fills the unpublished NV12 slot, then publishes it. ready stays set after the first good frame so Zoom does not drop to color bars."] },
+    { "dot": "amber", "title": "Screen capture", "items": ["Window and monitor capture live in this library. The virtual camera needs Windows 11 and MFCreateVirtualCamera."] }
+  ]
+}

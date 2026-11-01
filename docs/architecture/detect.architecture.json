@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "pm-video detect",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [1160, 500],
+    "views": [
+      { "id": "decode", "label": "Decode", "focus": ["onnx", "letterbox", "heads", "nms"], "note": "Boxes come back in the original image. The letterbox is undone inside the decoder." },
+      { "id": "tasks", "label": "Tasks", "focus": ["heads", "detect", "cls", "obb", "pose"], "note": "Auto can tell detect from classify. Oriented boxes and pose must be named." }
+    ]
+  },
+  "components": [
+    { "id": "onnx", "type": "external", "label": "ONNX Runtime", "sublabel": "src/lib/onnx", "pos": [30, 180], "size": [160, 64] },
+    { "id": "letterbox", "type": "backend", "label": "Letterbox", "sublabel": "unmap to pixels", "pos": [250, 180], "size": [160, 64] },
+    { "id": "heads", "type": "backend", "label": "Task head", "sublabel": "shape picks detect or class", "pos": [470, 180], "size": [180, 64] },
+    { "id": "detect", "type": "backend", "label": "Detect", "sublabel": "axis-aligned boxes", "pos": [720, 40], "size": [170, 56] },
+    { "id": "cls", "type": "backend", "label": "Classify", "sublabel": "one vector", "pos": [720, 140], "size": [170, 56] },
+    { "id": "obb", "type": "backend", "label": "OBB", "sublabel": "box plus angle", "pos": [720, 240], "size": [170, 56] },
+    { "id": "pose", "type": "backend", "label": "Pose", "sublabel": "box plus keypoints", "pos": [720, 340], "size": [170, 56] },
+    { "id": "nms", "type": "backend", "label": "NMS", "sublabel": "IoU or prob-IoU", "pos": [960, 180], "size": [150, 64] }
+  ],
+  "connections": [
+    { "id": "onnx-box", "from": "onnx", "to": "letterbox", "label": "tensors", "variant": "emphasis" },
+    { "id": "box-heads", "from": "letterbox", "to": "heads", "variant": "emphasis" },
+    { "id": "heads-detect", "from": "heads", "to": "detect" },
+    { "id": "heads-cls", "from": "heads", "to": "cls" },
+    { "id": "heads-obb", "from": "heads", "to": "obb" },
+    { "id": "heads-pose", "from": "heads", "to": "pose" },
+    { "id": "detect-nms", "from": "detect", "to": "nms" },
+    { "id": "obb-nms", "from": "obb", "to": "nms" },
+    { "id": "pose-nms", "from": "pose", "to": "nms" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "One result", "items": ["DecodeResult holds boxes or classes. JSON is only at the CLI boundary."] },
+    { "dot": "amber", "title": "Not built", "items": ["Instance masks and the semantic map are named and not implemented. ByteTrack is in the tree and is not compiled."] },
+    { "dot": "violet", "title": "Classify skips NMS", "items": ["A class vector has no boxes. Detect, oriented boxes, and pose do, and those go through NMS."] }
+  ]
+}

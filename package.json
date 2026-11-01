@@ -1,0 +1,20 @@
+{
+  "name": "@polymech/pm-video",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Portable video capture, screen and window recording, file encode, and the session recorder. Speech stays on the host.",
+  "scripts": {
+    "configure": "node scripts/cmake.mjs --preset dev",
+    "configure:release": "node scripts/cmake.mjs --preset release",
+    "build:cpp": "npm run configure && node scripts/cmake.mjs --build --preset dev --target pm-video",
+    "build:cpp-fast": "node scripts/ninja.mjs --preset dev --target pm-video",
+    "build:cpp:release": "npm run configure:release && node scripts/cmake.mjs --build --preset release --target pm-video",
+    "test": "node tests/run.mjs",
+    "test:color": "node tests/test-color.mjs",
+    "test:detect": "node tests/test-detect.mjs",
+    "test:signal": "node tests/test-signal.mjs",
+    "test:frame": "node tests/test-frame.mjs",
+    "test:build": "npm run build:cpp && npm test"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "pm-video filters",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [1180, 520],
+    "views": [
+      { "id": "face", "label": "Face", "focus": ["frame", "mesh", "face", "gpu"], "note": "Skin, lips, teeth, and grade run only when BeautyConfig asks for a mesh." },
+      { "id": "background", "label": "Background", "focus": ["frame", "seg", "bg", "gpu"], "note": "Blur and replacement run only when the config asks for a person mask." }
+    ]
+  },
+  "components": [
+    { "id": "config", "type": "frontend", "label": "BeautyConfig", "sublabel": "mesh, mask, or both", "pos": [30, 40], "size": [180, 60] },
+    { "id": "frame", "type": "backend", "label": "BGR24 frame", "sublabel": "BeautyProcessor", "pos": [30, 200], "size": [170, 64] },
+    { "id": "mesh", "type": "external", "label": "Face Landmarker", "sublabel": "MediaPipe DLL", "pos": [280, 200], "size": [170, 64] },
+    { "id": "face", "type": "backend", "label": "Face effects", "sublabel": "skin · lips · teeth", "pos": [520, 200], "size": [180, 64] },
+    { "id": "gpu", "type": "backend", "label": "Skin GPU", "sublabel": "D3D11, or CPU", "pos": [520, 380], "size": [180, 60] },
+    { "id": "seg", "type": "external", "label": "Image Segmenter", "sublabel": "MediaPipe DLL", "pos": [780, 200], "size": [180, 64] },
+    { "id": "bg", "type": "backend", "label": "Background", "sublabel": "blur · color · image", "pos": [1000, 200], "size": [150, 64] }
+  ],
+  "connections": [
+    { "id": "cfg-frame", "from": "config", "to": "frame", "fromSide": "bottom", "toSide": "top", "label": "create", "variant": "dashed" },
+    { "id": "frame-mesh", "from": "frame", "to": "mesh", "label": "if mesh", "variant": "emphasis" },
+    { "id": "mesh-face", "from": "mesh", "to": "face", "label": "landmarks" },
+    { "id": "face-gpu", "from": "face", "to": "gpu", "fromSide": "bottom", "toSide": "top", "label": "skin", "labelAt": [650, 330], "variant": "dashed" },
+    { "id": "face-seg", "from": "face", "to": "seg", "label": "if mask" },
+    { "id": "seg-bg", "from": "seg", "to": "bg", "label": "mask", "labelAt": [980, 278], "variant": "emphasis" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Order on one frame", "items": ["Mirror, then the mesh and face effects, then the mask and background, then an optional landmark drawing."] },
+    { "dot": "emerald", "title": "Asked for, or skipped", "items": ["needs_mesh() covers skin, lips, teeth, and grade. needs_seg() covers blur and replacement. Neither means the DLL is not called."] },
+    { "dot": "amber", "title": "Packed BGR only", "items": ["Any other pixel format is an error. MediaPipe sees an RGB copy. The GPU pass is used when D3D11 is there."] }
+  ]
+}

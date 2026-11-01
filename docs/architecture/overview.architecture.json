@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "pm-video",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 760],
+    "views": [
+      { "id": "record", "label": "Record path", "focus": ["cli", "lib", "recorder", "audio"], "note": "The command loop fills VideoTransformConfig. The session recorder and the file encoder live in the library." },
+      { "id": "hooks", "label": "One hook table", "focus": ["hooks", "lib", "speech"], "note": "hooks.cpp, captions.cpp, and mixed capture are compiled into pm-media once. Both executables call that table." },
+      { "id": "picture", "label": "Picture path", "focus": ["lib", "screen", "vcam"], "note": "Screen capture and the webcam publish frames. The Frame Server DLL is the camera other apps open." }
+    ]
+  },
+  "components": [
+    { "id": "cli", "type": "frontend", "label": "tanit-cli", "sublabel": "record command · xblox", "pos": [48, 320], "size": [200, 72] },
+    { "id": "hooks", "type": "external", "label": "Hook table", "sublabel": "one copy in pm-media", "pos": [48, 520], "size": [200, 72] },
+    { "id": "lib", "type": "backend", "label": "pm-video-lib", "sublabel": "pm::video", "pos": [360, 320], "size": [210, 72] },
+    { "id": "screen", "type": "backend", "label": "Screen capture", "sublabel": "window · monitor", "pos": [360, 120], "size": [210, 68] },
+    { "id": "encoder", "type": "backend", "label": "File encoder", "sublabel": "Media Foundation", "pos": [700, 520], "size": [210, 72] },
+    { "id": "recorder", "type": "backend", "label": "Session recorder", "sublabel": "WGC · picker · HUD", "pos": [700, 320], "size": [220, 72] },
+    { "id": "audio", "type": "backend", "label": "pm-audio", "sublabel": "MixedAudioCapture", "pos": [1020, 420], "size": [210, 72] },
+    { "id": "vcam", "type": "external", "label": "Virtual camera", "sublabel": "VCM2 · Frame Server", "pos": [700, 120], "size": [220, 68] },
+    { "id": "speech", "type": "external", "label": "Speech", "sublabel": "caption hook", "pos": [1020, 120], "size": [210, 68] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "pm-video-lib", "wraps": ["lib", "screen", "encoder", "recorder"] }
+  ],
+  "connections": [
+    { "id": "cli-lib", "from": "cli", "to": "lib", "label": "VideoTransformConfig", "variant": "emphasis" },
+    { "id": "lib-recorder", "from": "lib", "to": "recorder", "label": "start", "variant": "emphasis" },
+    { "id": "lib-screen", "from": "lib", "to": "screen", "fromSide": "top", "toSide": "bottom", "label": "capture" },
+    { "id": "lib-encoder", "from": "lib", "to": "encoder", "fromSide": "bottom", "toSide": "left", "label": "frames" },
+    { "id": "recorder-audio", "from": "recorder", "to": "audio", "label": "PCM" },
+    { "id": "encoder-audio", "from": "encoder", "to": "audio", "fromSide": "right", "toSide": "left", "label": "AAC mux" },
+    { "id": "hooks-lib", "from": "hooks", "to": "lib", "fromSide": "top", "toSide": "bottom", "label": "set_*", "variant": "dashed" },
+    { "id": "screen-vcam", "from": "screen", "to": "vcam", "label": "publish" },
+    { "id": "speech-recorder", "from": "speech", "to": "recorder", "fromSide": "bottom", "toSide": "top", "label": "sidecars", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Engines in the library", "items": ["Screen capture, the Media Foundation file encoder, and the WGC session recorder compile when PM_VIDEO_RECORD_ENGINES is on."] },
+    { "dot": "emerald", "title": "One hook table", "items": ["pm-media compiles hooks.cpp, captions.cpp, and mixed_capture.cpp. tanit.exe and tanit-cli.exe call that copy."] },
+    { "dot": "amber", "title": "Host still owns", "items": ["The video record command and the xblox blocks fill the config. Whisper stays behind set_caption_transcribe."] }
+  ]
+}
