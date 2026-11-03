@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <thread>
 #include <vector>
+#include "string/string_utils.hpp"
 
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "user32.lib")
@@ -38,13 +39,6 @@ constexpr UINT kStopMessage = WM_APP + 0x433;
 constexpr wchar_t kClassName[] = L"PmCameraOverlayPip";
 
 #if defined(FEATURE_VIDEO) && FEATURE_VIDEO
-inline std::string lower_ascii_copy(std::string s)
-{
-    for (char& c : s) {
-        if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
-    }
-    return s;
-}
 
 inline double mode_fps(const DeviceMode& m) noexcept
 {
@@ -65,7 +59,7 @@ inline bool parse_resolution_token(
     want_h = 0;
     want_fps = 0;
     want_max = false;
-    token = lower_ascii_copy(std::move(token));
+    token = media::strutil::lower_ascii(std::move(token));
     while (!token.empty() && (token.front() == ' ' || token.front() == '\t'))
         token.erase(token.begin());
     while (!token.empty() && (token.back() == ' ' || token.back() == '\t'))

@@ -4,17 +4,11 @@
 #include <cctype>
 #include <random>
 #include <string_view>
+#include "string/string_utils.hpp"
 
 namespace pm::video::streaming {
 namespace {
 
-std::string lower_copy(std::string value)
-{
-    std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
-        return static_cast<char>(std::tolower(ch));
-    });
-    return value;
-}
 
 std::string json_string(const nlohmann::json& obj, const char* key)
 {
@@ -46,7 +40,7 @@ const char* signal_type_name(SignalType type)
 
 SignalType parse_signal_type(const std::string& raw)
 {
-    const std::string t = lower_copy(raw);
+    const std::string t = media::strutil::lower_ascii(raw);
     if (t == "offer") return SignalType::Offer;
     if (t == "answer") return SignalType::Answer;
     if (t == "candidate" || t == "icecandidate" || t == "ice-candidate") return SignalType::Candidate;

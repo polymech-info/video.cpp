@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <sstream>
 #include <string>
+#include "string/string_utils.hpp"
 
 namespace pm::video {
 namespace {
@@ -20,12 +21,6 @@ bool mode_less(const DeviceMode& a, const DeviceMode& b)
     return a.format < b.format;
 }
 
-std::string lower_copy(std::string value)
-{
-    for (char& c : value)
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-    return value;
-}
 
 } // namespace
 
@@ -69,9 +64,9 @@ bool capture_device_present(const std::string& needle)
 {
     if (needle.empty())
         return true;
-    const std::string want = lower_copy(needle);
+    const std::string want = media::strutil::lower_ascii(needle);
     for (const auto& device : enumerate_capture_devices()) {
-        if (lower_copy(device.name).find(want) != std::string::npos)
+        if (media::strutil::lower_ascii(device.name).find(want) != std::string::npos)
             return true;
     }
     return false;
@@ -81,9 +76,9 @@ std::string friendly_capture_name(const std::string& camera_input)
 {
     const auto videos = enumerate_capture_devices();
     if (!camera_input.empty()) {
-        const std::string want = lower_copy(camera_input);
+        const std::string want = media::strutil::lower_ascii(camera_input);
         for (const auto& device : videos) {
-            if (lower_copy(device.name).find(want) != std::string::npos)
+            if (media::strutil::lower_ascii(device.name).find(want) != std::string::npos)
                 return device.name;
         }
         return camera_input;

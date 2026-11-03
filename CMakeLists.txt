@@ -23,6 +23,12 @@ set(PM_VIDEO_DIST_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH
   "Directory for tanit_vcam_source and pm-video-nvenc")
 option(PM_VIDEO_RECORD_ENGINES "Screen capture, file encoder, and session recorder" OFF)
 option(PM_VIDEO_HOST_SINGLETONS "Host compiles hooks.cpp and captions.cpp once" OFF)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../commons.cpp/cmake/host-layout.cmake")
+  set(_PM_VIDEO_LINK_COMMONS_DEFAULT ON)
+else()
+  set(_PM_VIDEO_LINK_COMMONS_DEFAULT OFF)
+endif()
+option(PM_VIDEO_LINK_COMMONS "Link sibling packages/commons.cpp." ${_PM_VIDEO_LINK_COMMONS_DEFAULT})
 
 set(PM_VIDEO_SOURCES
   src/dynlib.cpp
@@ -93,6 +99,15 @@ target_include_directories(pm-video-lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/incl
 target_compile_features(pm-video-lib PUBLIC cxx_std_20)
 target_compile_definitions(pm-video-lib PRIVATE FEATURE_VIDEO=1)
 target_link_libraries(pm-video-lib PUBLIC nlohmann_json::nlohmann_json)
+if(PM_VIDEO_LINK_COMMONS)
+  set(_pm_commons_layout "${CMAKE_CURRENT_SOURCE_DIR}/../commons.cpp/cmake/host-layout.cmake")
+  if(NOT EXISTS "${_pm_commons_layout}")
+    message(FATAL_ERROR "PM_VIDEO_LINK_COMMONS is ON but ${_pm_commons_layout} is missing")
+  endif()
+  include("${_pm_commons_layout}")
+  pm_commons_add_sibling("${CMAKE_CURRENT_BINARY_DIR}/pm-commons-lib")
+  target_link_libraries(pm-video-lib PUBLIC pm-commons-lib)
+endif()
 
 if(EXISTS "${_pm_video_onnx}")
   target_include_directories(pm-video-lib PRIVATE "${PM_VIDEO_TANIT_ROOT}/src")

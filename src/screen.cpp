@@ -25,6 +25,7 @@
 #include <vector>
 
 #include <tlhelp32.h>
+#include "string/string_utils.hpp"
 
 namespace pm::video {
 
@@ -291,9 +292,7 @@ bool parse_screen_spec(const std::string& spec, ScreenSpec& out) noexcept
 
     if (!parts.empty()) {
         std::string token = parts[0];
-        for (char& c : token) {
-            if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
-        }
+        token = media::strutil::lower_ascii(std::move(token));
         if (token == "current") {
             out.use_current = true;
             out.monitor_idx = 0;
@@ -307,9 +306,7 @@ bool parse_screen_spec(const std::string& spec, ScreenSpec& out) noexcept
     };
     auto apply_tag = [&out](const std::string& key, const std::string& val) {
         auto lower = [](std::string s) {
-            for (char& c : s) {
-                if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
-            }
+            s = media::strutil::lower_ascii(std::move(s));
             return s;
         };
         if (key == "wintitle" || key == "title") {

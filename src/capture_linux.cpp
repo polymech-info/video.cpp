@@ -32,6 +32,7 @@
 
 #include <jpeglib.h>
 #include <setjmp.h>
+#include "string/string_utils.hpp"
 
 namespace fs = std::filesystem;
 namespace pm::video {
@@ -299,7 +300,7 @@ std::vector<uint8_t> encode_jpeg(const VideoFrame& frame, int quality) {
 
 bool save_frame(const VideoFrame& frame, const std::string& path, std::string& err, int jpeg_quality) {
     std::string lower = path;
-    for (auto& c : lower) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    lower = media::strutil::lower_ascii(std::move(lower));
     const bool is_jpg = lower.size() >= 4 &&
                         (lower.compare(lower.size() - 4, 4, ".jpg") == 0 ||
                          (lower.size() >= 5 && lower.compare(lower.size() - 5, 5, ".jpeg") == 0));

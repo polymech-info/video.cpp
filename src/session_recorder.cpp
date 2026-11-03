@@ -9,6 +9,7 @@
 #include "pm/video/pause.hpp"
 #if defined(FEATURE_STT) && FEATURE_STT
 #include "pm/video/captions.hpp"
+#include "string/string_utils.hpp"
 #endif
 
 #if defined(_WIN32) && defined(FEATURE_SESSION_VIDEO_RECORDER)
@@ -300,8 +301,7 @@ public:
         m_fps      = std::clamp(fps, 1, 240);
         m_frameDur = 10'000'000LL / static_cast<LONGLONG>(m_fps);
         m_bitrateKbps = std::clamp(bitrate_kbps, 0, 100000);
-        std::transform(encoder.begin(), encoder.end(), encoder.begin(),
-                       [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        encoder = media::strutil::lower_ascii(std::move(encoder));
         m_encoderRequest = (encoder == "nvenc" || encoder == "mediafoundation")
             ? std::move(encoder) : std::string("auto");
         m_haveAcceptedFrame = false;
@@ -312,30 +312,18 @@ public:
         m_effectiveBitrateKbps = 0;
         m_target = target;
         m_transform = transform ? *transform : VideoTransformConfig{};
-        std::transform(
-            m_transform.size_mode.begin(), m_transform.size_mode.end(),
-            m_transform.size_mode.begin(),
-            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        m_transform.size_mode = media::strutil::lower_ascii(std::move(m_transform.size_mode));
         if (m_transform.size_mode != "pad" &&
             m_transform.size_mode != "fit" &&
             m_transform.size_mode != "fill") {
             m_transform.size_mode = "native";
         }
-        std::transform(
-            m_transform.follow.begin(), m_transform.follow.end(),
-            m_transform.follow.begin(),
-            [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        m_transform.follow = media::strutil::lower_ascii(std::move(m_transform.follow));
         if (m_transform.follow != "cursor" &&
             m_transform.follow != "anchor") {
             m_transform.follow = "none";
         }
-        std::transform(
-            m_transform.hud_capture.begin(),
-            m_transform.hud_capture.end(),
-            m_transform.hud_capture.begin(),
-            [](unsigned char c) {
-                return static_cast<char>(std::tolower(c));
-            });
+        m_transform.hud_capture = media::strutil::lower_ascii(std::move(m_transform.hud_capture));
         if (m_transform.hud_capture != "visible" &&
             m_transform.hud_capture != "exclude") {
             m_transform.hud_capture = "auto";
@@ -1215,11 +1203,7 @@ public:
         }
         if (!update.follow.empty()) {
             std::string follow = update.follow;
-            std::transform(
-                follow.begin(), follow.end(), follow.begin(),
-                [](unsigned char c) {
-                    return static_cast<char>(std::tolower(c));
-                });
+            follow = media::strutil::lower_ascii(std::move(follow));
             if (follow != "none" && follow != "anchor" &&
                 follow != "cursor") {
                 error = "follow must be none, anchor, or cursor";

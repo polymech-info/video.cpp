@@ -31,6 +31,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include "string/string_utils.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -637,7 +638,7 @@ static bool container_from_ext(const std::string& path,
     auto dot = path.rfind('.');
     if (dot == std::string::npos) return false;
     std::string ext = path.substr(dot + 1);
-    for (auto& c : ext) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    ext = media::strutil::lower_ascii(std::move(ext));
 
     if (ext == "jpg" || ext == "jpeg") {
         container = GUID_ContainerFormatJpeg;
