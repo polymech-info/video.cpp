@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include "fs/path_sanitizer.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <string>
@@ -27,7 +28,7 @@ inline bool is_still_image_path(std::string_view path)
 
 inline bool is_native_container_path(const std::filesystem::path& path)
 {
-    std::string ext = path.extension().string();
+    std::string ext = media::path::path_to_utf8(path.extension());
     ext = media::strutil::lower_ascii(std::move(ext));
     return ext == ".mp4" || ext == ".mov";
 }

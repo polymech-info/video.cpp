@@ -1,3 +1,4 @@
+#include "fs/path_sanitizer.hpp"
 #if defined(FEATURE_VIDEO) && FEATURE_VIDEO
 
 #ifndef _DEFAULT_SOURCE
@@ -135,9 +136,9 @@ static std::vector<std::string> list_video_nodes() {
     if (!fs::exists("/dev", ec)) return out;
     for (const auto& e : fs::directory_iterator("/dev", ec)) {
         if (ec) break;
-        std::string name = e.path().filename().string();
+        std::string name = media::path::path_to_utf8(e.path().filename());
         if (name.size() >= 5 && name.compare(0, 5, "video") == 0)
-            out.push_back(e.path().string());
+            out.push_back(media::path::path_to_utf8(e.path()));
     }
     std::sort(out.begin(), out.end());
     return out;

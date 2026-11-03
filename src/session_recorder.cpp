@@ -2,6 +2,7 @@
 // Interop: vendored robmikh.common (see src/session/recorder/vendor).
 
 #include "pm/video/session_recorder.hpp"
+#include "fs/path_sanitizer.hpp"
 #include "pm/video/nvenc_loader.hpp"
 #include "pm/video/zoom.hpp"
 #include "pm/video/overlay.hpp"
@@ -403,7 +404,7 @@ public:
         m_loggedVidWriteFail.store(false, std::memory_order_relaxed);
         m_loggedSizeChange   = false;
         m_logFrameIndexMod30 = 0;
-        { const auto _u8 = out.u8string(); ui_log_session_video(std::string("starting capture, output: ") + std::string(reinterpret_cast<const char*>(_u8.data()), _u8.size())); }
+        ui_log_session_video(std::string("starting capture, output: ") + media::path::path_to_utf8(out));
         ui_log_session_video("D3D11: D3D11CreateDevice (BGRA+VIDEO, FL 11.1/11.0, HW then WARP)…");
         bool used_warp = false;
         m_d3d = create_d3d11_device_for_wgc(m_ctx, &used_warp);
@@ -759,14 +760,11 @@ public:
         }
         if (!m_loggedFirstFrame) {
             m_loggedFirstFrame = true;
-            {
-                const auto _u8 = m_outPath.u8string();
-                ui_warn_session_video(
-                    std::string("first accepted WGC frame → encode queue; output: ") +
-                    std::string(reinterpret_cast<const char*>(_u8.data()), _u8.size()) +
-                    " audio=" + std::to_string(m_audio_enabled ? 1 : 0) +
-                    " have_pts_t0=" + std::to_string(m_have_pts_t0 ? 1 : 0));
-            }
+            ui_warn_session_video(
+                std::string("first accepted WGC frame → encode queue; output: ") +
+                media::path::path_to_utf8(m_outPath) +
+                " audio=" + std::to_string(m_audio_enabled ? 1 : 0) +
+                " have_pts_t0=" + std::to_string(m_have_pts_t0 ? 1 : 0));
         }
 
         winrt::com_ptr<ID3D11Texture2D> srcTex;
@@ -980,10 +978,8 @@ public:
                         return;
                     }
                     std::string line = "captions: STT finished - wrote";
-                    for (const auto& p : written) {
-                        const auto u8 = p.u8string();
-                        line += " " + std::string(reinterpret_cast<const char*>(u8.data()), u8.size());
-                    }
+                    for (const auto& p : written)
+                        line += " " + media::path::path_to_utf8(p);
                     ui_log_session_video(std::move(line));
                 } catch (const std::exception& ex) {
                     ui_log_session_video(
@@ -1058,12 +1054,11 @@ public:
             std::error_code remove_ec;
             const auto sz = std::filesystem::file_size(m_outPath, remove_ec);
             if (!remove_ec) {
-                const auto u8 = m_outPath.u8string();
                 std::filesystem::remove(m_outPath, remove_ec);
                 ui_warn_session_video(
                     "discarded incomplete MF output (" + std::to_string(sz) +
                     " bytes, frames=" + std::to_string(frames) + "): " +
-                    std::string(reinterpret_cast<const char*>(u8.data()), u8.size()));
+                    media::path::path_to_utf8(m_outPath));
             }
         }
         m_nvenc.reset();

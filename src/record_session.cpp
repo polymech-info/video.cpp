@@ -1,3 +1,4 @@
+#include "fs/path_sanitizer.hpp"
 #if defined(FEATURE_VIDEO) && FEATURE_VIDEO
 
 #include "pm/video/record_session.hpp"

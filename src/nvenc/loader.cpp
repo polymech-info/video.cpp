@@ -1,4 +1,5 @@
 #include "pm/video/nvenc_loader.hpp"
+#include "fs/path_sanitizer.hpp"
 
 #include "pm/video/nvenc_api.hpp"
 
@@ -51,7 +52,7 @@ const NvencApi& api() noexcept
             pm::video::exe_dir() / "pm-video-nvenc.dll";
         state.module = pm::video::dlib::load(
             "pm-video-nvenc.dll",
-            pm::video::exe_dir().string());
+            media::path::path_to_utf8(pm::video::exe_dir()));
         if (!state.module) {
 #if defined(_WIN32)
             const DWORD load_error = ::GetLastError();
@@ -61,7 +62,7 @@ const NvencApi& api() noexcept
                 plugin_path, file_error);
             if (!installed) {
                 state.error = "NVENC plugin is not installed at " +
-                              plugin_path.string() +
+                              media::path::path_to_utf8(plugin_path) +
                               " (install it and restart the process)";
             } else {
 #if defined(_WIN32)

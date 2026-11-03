@@ -1,3 +1,4 @@
+#include "fs/path_sanitizer.hpp"
 
 #if defined(FEATURE_VIDEO) && FEATURE_VIDEO && defined(_WIN32) && PM_HAS_AUDIO_IO
 
@@ -787,7 +788,7 @@ void MfVideoAudioMux::finish_caption_dump() noexcept
 #if defined(FEATURE_STT) && FEATURE_STT
     try {
         const bool ok = pm::stt::write_pcm_wav(
-            path.string(), pcm.data(), pcm.size(), 16000);
+            media::path::path_to_utf8(path), pcm.data(), pcm.size(), 16000);
         if (!ok)
             pm::video::log_error("[captions] write_pcm_wav failed");
     } catch (const std::exception& ex) {
