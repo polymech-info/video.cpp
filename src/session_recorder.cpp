@@ -8,9 +8,9 @@
 #include "pm/video/overlay.hpp"
 #include "pm/video/idle.hpp"
 #include "pm/video/pause.hpp"
+#include "string/string_utils.hpp"
 #if defined(FEATURE_STT) && FEATURE_STT
 #include "pm/video/captions.hpp"
-#include "string/string_utils.hpp"
 #endif
 
 #if defined(_WIN32) && defined(FEATURE_SESSION_VIDEO_RECORDER)
