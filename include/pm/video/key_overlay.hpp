@@ -17,7 +17,7 @@
 #include <string>
 
 #include <nlohmann/json.hpp>
-#include "string/string_utils.hpp"
+#include "pm/video/text.hpp"
 
 namespace pm::video {
 
@@ -119,7 +119,7 @@ inline const char* key_overlay_align_name(KeyOverlayAlign a) noexcept
 
 inline KeyOverlayFilter parse_key_overlay_filter(std::string name) noexcept
 {
-    name = media::strutil::lower_ascii(std::move(name));
+    name = pm::video::lower_ascii(std::move(name));
     if (name == "printable") return KeyOverlayFilter::printable;
     if (name == "all") return KeyOverlayFilter::all;
     return KeyOverlayFilter::shortcuts;

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <sstream>
 #include <string>
-#include "string/string_utils.hpp"
+#include "pm/video/text.hpp"
 
 namespace pm::video {
 namespace {
@@ -64,9 +64,9 @@ bool capture_device_present(const std::string& needle)
 {
     if (needle.empty())
         return true;
-    const std::string want = media::strutil::lower_ascii(needle);
+    const std::string want = pm::video::lower_ascii(needle);
     for (const auto& device : enumerate_capture_devices()) {
-        if (media::strutil::lower_ascii(device.name).find(want) != std::string::npos)
+        if (pm::video::lower_ascii(device.name).find(want) != std::string::npos)
             return true;
     }
     return false;
@@ -76,9 +76,9 @@ std::string friendly_capture_name(const std::string& camera_input)
 {
     const auto videos = enumerate_capture_devices();
     if (!camera_input.empty()) {
-        const std::string want = media::strutil::lower_ascii(camera_input);
+        const std::string want = pm::video::lower_ascii(camera_input);
         for (const auto& device : videos) {
-            if (media::strutil::lower_ascii(device.name).find(want) != std::string::npos)
+            if (pm::video::lower_ascii(device.name).find(want) != std::string::npos)
                 return device.name;
         }
         return camera_input;

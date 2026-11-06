@@ -4,7 +4,7 @@
 #include <cctype>
 #include <random>
 #include <string_view>
-#include "string/string_utils.hpp"
+#include "pm/video/text.hpp"
 
 namespace pm::video::streaming {
 namespace {
@@ -40,7 +40,7 @@ const char* signal_type_name(SignalType type)
 
 SignalType parse_signal_type(const std::string& raw)
 {
-    const std::string t = media::strutil::lower_ascii(raw);
+    const std::string t = pm::video::lower_ascii(raw);
     if (t == "offer") return SignalType::Offer;
     if (t == "answer") return SignalType::Answer;
     if (t == "candidate" || t == "icecandidate" || t == "ice-candidate") return SignalType::Candidate;

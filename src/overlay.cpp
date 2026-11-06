@@ -24,7 +24,7 @@
 #include <stdexcept>
 #include <thread>
 #include <vector>
-#include "string/string_utils.hpp"
+#include "pm/video/text.hpp"
 
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "user32.lib")
@@ -59,7 +59,7 @@ inline bool parse_resolution_token(
     want_h = 0;
     want_fps = 0;
     want_max = false;
-    token = media::strutil::lower_ascii(std::move(token));
+    token = pm::video::lower_ascii(std::move(token));
     while (!token.empty() && (token.front() == ' ' || token.front() == '\t'))
         token.erase(token.begin());
     while (!token.empty() && (token.back() == ' ' || token.back() == '\t'))

@@ -20,6 +20,7 @@ checks.assert(px.json?.lip === 61 && px.json?.wantsBeauty === true && px.json?.n
 
 const nv = run(['nv12']);
 checks.assert(nv.status === 0 && nv.json?.bytes === 6 && nv.json?.y0 === 82, '2x2 red NV12 luma');
+checks.assert(nv.json?.u === 90 && nv.json?.v === 240, '2x2 red NV12 chroma');
 
 const vcam = run(['vcam']);
 checks.assert(vcam.status === 0 && vcam.json?.magic === 0x56434D32, 'VCM2 magic');

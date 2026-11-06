@@ -1,5 +1,5 @@
 #include "pm/video/filters/image_segmenter.hpp"
-#include "fs/path_sanitizer.hpp"
+#include "pm/video/text.hpp"
 
 #include "pm/video/hooks.hpp"
 #include "pm/video/dynlib.hpp"
@@ -51,7 +51,7 @@ std::mutex& api_mutex() {
 
 void remember(std::vector<std::string>& attempted, const fs::path& path) {
     if (path.empty()) return;
-    attempted.push_back(media::path::path_to_utf8(path));
+    attempted.push_back(pm::video::path_to_utf8(path));
 }
 
 std::vector<fs::path> dll_search_dirs(const std::string& dll_override) {
@@ -99,7 +99,7 @@ std::string resolve_existing(const std::vector<fs::path>& candidates,
         remember(attempted, path);
         std::error_code ec;
         if (fs::is_regular_file(path, ec))
-            return media::path::path_to_utf8(fs::weakly_canonical(path, ec));
+            return pm::video::path_to_utf8(fs::weakly_canonical(path, ec));
     }
     return {};
 }
@@ -113,14 +113,14 @@ bool load_dll(const std::string& dll_override, SegApi& state,
     if (!dll_override.empty()) {
         const fs::path override_path(dll_override);
         if (override_path.has_filename())
-            name = media::path::path_to_utf8(override_path.filename());
+            name = pm::video::path_to_utf8(override_path.filename());
         remember(attempted, override_path);
         const std::string search = override_path.has_parent_path()
-                                       ? media::path::path_to_utf8(override_path.parent_path())
+                                       ? pm::video::path_to_utf8(override_path.parent_path())
                                        : std::string{};
         state.module = pm::video::dlib::load(name, search);
         if (state.module)
-            state.loaded_path = media::path::path_to_utf8(override_path);
+            state.loaded_path = pm::video::path_to_utf8(override_path);
     }
 
     auto bind_seg = [&](void* module) -> bool {
@@ -149,19 +149,19 @@ bool load_dll(const std::string& dll_override, SegApi& state,
         for (const auto& dir : dll_search_dirs(dll_override)) {
             const fs::path full = dir / kDllName;
             remember(attempted, full);
-            void* module = pm::video::dlib::load(kDllName, media::path::path_to_utf8(dir));
+            void* module = pm::video::dlib::load(kDllName, pm::video::path_to_utf8(dir));
             if (!module)
                 continue;
             if (!bind_seg(module))
                 continue;
             state.module = module;
-            state.loaded_path = media::path::path_to_utf8(full);
+            state.loaded_path = pm::video::path_to_utf8(full);
             break;
         }
     }
 
     if (!state.module) {
-        remember(attempted, media::path::path_from_utf8(kDllName));
+        remember(attempted, pm::video::path_from_utf8(kDllName));
         if (pm::video::dlib::probe(kDllName)) {
             void* module = pm::video::dlib::load(kDllName);
             if (module && bind_seg(module)) {

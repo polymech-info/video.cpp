@@ -154,22 +154,19 @@ bool load_frame(const std::string& path, VideoFrame& out, std::string& err);
 // canonical filter layout. Lets a consumer skip to_bgr24() entirely and move the
 // buffer instead of copying it (the frame-pump fast path).
 inline bool is_packed_bgr24(const VideoFrame& f) noexcept {
-    return f.format == PixelFormat::BGR24 && f.width > 0 && f.height > 0 &&
-           f.stride == f.width * 3 &&
-           f.data.size() >= static_cast<size_t>(f.width) * f.height * 3;
+    if (!rgb_frame_fits(f) || f.format != PixelFormat::BGR24) return false;
+    if (f.width > (std::numeric_limits<int>::max() / 3)) return false;
+    return f.stride == f.width * 3;
 }
 
 // Handles BGR24 (repack to remove row padding) and RGB24 (channel swap).
 // Returns false for NV12/MJPEG/Unknown (decode those upstream). Pure; header-
 // inline so it is available on every platform without a backend TU.
 inline bool to_bgr24(const VideoFrame& in, VideoFrame& out) {
-    if (in.width <= 0 || in.height <= 0 || in.data.empty()) return false;
+    if (!rgb_frame_fits(in)) return false;
     const bool is_rgb = in.format == PixelFormat::RGB24;
-    const bool is_bgr = in.format == PixelFormat::BGR24;
-    if (!is_rgb && !is_bgr) return false;
     const int w = in.width, h = in.height;
     const int src_stride = in.stride > 0 ? in.stride : w * 3;
-    if (static_cast<size_t>(src_stride) * static_cast<size_t>(h) > in.data.size()) return false;
     out.width        = w;
     out.height       = h;
     out.stride       = w * 3;
@@ -179,7 +176,7 @@ inline bool to_bgr24(const VideoFrame& in, VideoFrame& out) {
     for (int y = 0; y < h; ++y) {
         const uint8_t* s = in.data.data() + static_cast<size_t>(y) * src_stride;
         uint8_t*       d = out.data.data() + static_cast<size_t>(y) * out.stride;
-        if (is_bgr) {
+        if (!is_rgb) {
             std::memcpy(d, s, static_cast<size_t>(w) * 3);
         } else { // RGB → BGR
             for (int x = 0; x < w; ++x) {

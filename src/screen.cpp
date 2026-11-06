@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <cstring>
 #include <cstdlib>
+#include <limits>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
@@ -25,7 +26,7 @@
 #include <vector>
 
 #include <tlhelp32.h>
-#include "string/string_utils.hpp"
+#include "pm/video/text.hpp"
 
 namespace pm::video {
 
@@ -292,7 +293,7 @@ bool parse_screen_spec(const std::string& spec, ScreenSpec& out) noexcept
 
     if (!parts.empty()) {
         std::string token = parts[0];
-        token = media::strutil::lower_ascii(std::move(token));
+        token = pm::video::lower_ascii(std::move(token));
         if (token == "current") {
             out.use_current = true;
             out.monitor_idx = 0;
@@ -306,7 +307,7 @@ bool parse_screen_spec(const std::string& spec, ScreenSpec& out) noexcept
     };
     auto apply_tag = [&out](const std::string& key, const std::string& val) {
         auto lower = [](std::string s) {
-            s = media::strutil::lower_ascii(std::move(s));
+            s = pm::video::lower_ascii(std::move(s));
             return s;
         };
         if (key == "wintitle" || key == "title") {
@@ -500,7 +501,10 @@ static bool gdi_capture_rect(const RECT& rect, VideoFrame& out, bool include_lay
     if (ok && include_cursor)
         draw_cursor_if_inside(mem_dc, rect);
 
-    if (ok) {
+    BOOL copied = ok;
+    if (copied && (W <= 0 || H <= 0 || W > (std::numeric_limits<int>::max() / 4)))
+        copied = FALSE;
+    if (copied) {
         // BGRA → BGR24 (drop alpha channel)
         const int stride32 = W * 4;
         const int stride24 = W * 3;
@@ -527,7 +531,7 @@ static bool gdi_capture_rect(const RECT& rect, VideoFrame& out, bool include_lay
     ::DeleteObject(bmp);
     ::DeleteDC(mem_dc);
     ::ReleaseDC(nullptr, screen_dc);
-    return ok;
+    return copied;
 }
 
 // Read a sub-region from an HBITMAP into a packed BGR24 VideoFrame.
@@ -536,6 +540,8 @@ static bool hbitmap_region_to_frame(HBITMAP bmp, int src_x, int src_y,
 {
     BITMAP bm{};
     if (!::GetObject(bmp, sizeof(bm), &bm) || bm.bmWidth <= 0 || bm.bmHeight <= 0)
+        return false;
+    if (bm.bmWidth > (std::numeric_limits<int>::max() - 3) / 3)
         return false;
 
     src_x = std::max(0, src_x);
@@ -553,6 +559,8 @@ static bool hbitmap_region_to_frame(HBITMAP bmp, int src_x, int src_y,
     bmi.bmiHeader.biCompression = BI_RGB;
 
     const int full_stride = (static_cast<int>(bm.bmWidth) * 3 + 3) & ~3;
+    if (full_stride <= 0 || bm.bmHeight > (std::numeric_limits<int>::max() / full_stride))
+        return false;
     std::vector<uint8_t> full(static_cast<size_t>(full_stride) * bm.bmHeight);
 
     HDC tmp = ::CreateCompatibleDC(nullptr);
@@ -586,7 +594,7 @@ static void trim_black_window_frame(VideoFrame& frame)
 {
     if (frame.format != PixelFormat::BGR24 ||
         frame.width <= 2 || frame.height <= 2 ||
-        frame.stride < frame.width * 3)
+        !rgb_frame_fits(frame))
         return;
 
     const auto black = [](const uint8_t* pixel) {

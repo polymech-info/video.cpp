@@ -29,7 +29,7 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include "string/string_utils.hpp"
+#include "pm/video/text.hpp"
 
 namespace pm::video {
 
@@ -81,7 +81,7 @@ inline bool is_video_file_spec(const std::string& spec) noexcept {
     const auto dot = spec.find_last_of('.');
     if (dot == std::string::npos || dot + 1 >= spec.size()) return false;
     std::string ext = spec.substr(dot + 1);
-    ext = media::strutil::lower_ascii(std::move(ext));
+    ext = pm::video::lower_ascii(std::move(ext));
     static constexpr const char* kVideoExt[] = {
         "mp4", "m4v", "mov", "mkv", "webm", "avi", "wmv",
         "flv", "mpg", "mpeg", "m2ts", "mts", "ts", "3gp", "ogv",

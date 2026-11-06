@@ -23,16 +23,12 @@ set(PM_VIDEO_DIST_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH
   "Directory for tanit_vcam_source and pm-video-nvenc")
 option(PM_VIDEO_RECORD_ENGINES "Screen capture, file encoder, and session recorder" OFF)
 option(PM_VIDEO_HOST_SINGLETONS "Host compiles hooks.cpp and captions.cpp once" OFF)
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../commons.cpp/cmake/host-layout.cmake")
-  set(_PM_VIDEO_LINK_COMMONS_DEFAULT ON)
-else()
-  set(_PM_VIDEO_LINK_COMMONS_DEFAULT OFF)
-endif()
-option(PM_VIDEO_LINK_COMMONS "Link sibling packages/commons.cpp." ${_PM_VIDEO_LINK_COMMONS_DEFAULT})
+option(PM_VIDEO_LINK_COMMONS "Link sibling packages/commons.cpp." OFF)
 
 set(PM_VIDEO_SOURCES
   src/dynlib.cpp
   src/devices.cpp
+  src/backends.cpp
   src/mjpeg_avi.cpp
   src/filters/image_ops.cpp
   src/vcam/convert.cpp
@@ -98,6 +94,19 @@ add_library(pm-video-lib STATIC ${PM_VIDEO_SOURCES})
 target_include_directories(pm-video-lib PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_compile_features(pm-video-lib PUBLIC cxx_std_20)
 target_compile_definitions(pm-video-lib PRIVATE FEATURE_VIDEO=1)
+if(PM_VIDEO_RECORD_ENGINES)
+  target_compile_definitions(pm-video-lib PRIVATE PM_VIDEO_RECORD_ENGINES=1)
+endif()
+option(PM_VIDEO_ASAN "AddressSanitizer. Off in the host build." OFF)
+if(PM_VIDEO_ASAN)
+  if(MSVC)
+    target_compile_options(pm-video-lib PRIVATE /fsanitize=address)
+    target_link_options(pm-video-lib PUBLIC /fsanitize=address)
+  else()
+    target_compile_options(pm-video-lib PRIVATE -fsanitize=address,undefined)
+    target_link_options(pm-video-lib PUBLIC -fsanitize=address,undefined)
+  endif()
+endif()
 target_link_libraries(pm-video-lib PUBLIC nlohmann_json::nlohmann_json)
 if(PM_VIDEO_LINK_COMMONS)
   set(_pm_commons_layout "${CMAKE_CURRENT_SOURCE_DIR}/../commons.cpp/cmake/host-layout.cmake")
@@ -193,5 +202,12 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     target_compile_options(pm-video PRIVATE /W3 /utf-8 /EHsc)
   else()
     target_compile_options(pm-video PRIVATE -Wall -Wextra)
+  endif()
+
+  include(CTest)
+  if(BUILD_TESTING)
+    add_test(NAME pm-video-cli
+      COMMAND node tests/run.mjs
+      WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
   endif()
 endif()

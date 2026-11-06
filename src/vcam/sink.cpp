@@ -226,10 +226,10 @@ bool start_hr_needs_admin(HRESULT hr) {
 }
 
 void print_elevation_notice() {
-    std::fprintf(stderr,
-                 "Pixlwiz Cam needs a one-time administrator approval so Windows\n"
-                 "Frame Server can load the camera source (HKLM CLSID + ProgramData DLL).\n"
-                 "A UAC prompt will appear. This window keeps recording after you approve.\n");
+    pm::video::log_warn(
+        "Pixlwiz Cam needs a one-time administrator approval so Windows "
+        "Frame Server can load the camera source (HKLM CLSID + ProgramData DLL). "
+        "A UAC prompt will appear. This window keeps recording after you approve.");
 }
 
 bool elevate_vcam_cmd(const wchar_t* params, std::string& error) {
@@ -558,8 +558,16 @@ bool VcamSink::push(const pm::video::VideoFrame& frame, std::string& error) {
         }
         src = &bgr;
     }
-    scale_bgr24(*src, kWidth, kHeight, impl_->scaled);
-    bgr24_to_nv12(impl_->scaled.data(), kWidth, kHeight, kWidth * 3, impl_->nv12.data());
+    if (!scale_bgr24(*src, kWidth, kHeight, impl_->scaled)) {
+        error = "vcam sink scale failed";
+        return false;
+    }
+    if (!bgr24_to_nv12(impl_->scaled.data(), impl_->scaled.size(),
+                       kWidth, kHeight, kWidth * 3,
+                       impl_->nv12.data(), impl_->nv12.size())) {
+        error = "vcam sink nv12 conversion failed";
+        return false;
+    }
     // Slot 0 is the VCM1 pixel region. Also fill slot 1 so a VCM2 reader that
     // already published slot=1 still sees a picture. VCM1 magic keeps a leftover
     // pre-rename DLL (pixlwiz_vcam_source.dll) from rejecting the header.

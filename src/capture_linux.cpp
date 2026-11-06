@@ -1,4 +1,4 @@
-#include "fs/path_sanitizer.hpp"
+#include "pm/video/text.hpp"
 #if defined(FEATURE_VIDEO) && FEATURE_VIDEO
 
 #ifndef _DEFAULT_SOURCE
@@ -33,7 +33,7 @@
 
 #include <jpeglib.h>
 #include <setjmp.h>
-#include "string/string_utils.hpp"
+#include "pm/video/text.hpp"
 
 namespace fs = std::filesystem;
 namespace pm::video {
@@ -136,9 +136,9 @@ static std::vector<std::string> list_video_nodes() {
     if (!fs::exists("/dev", ec)) return out;
     for (const auto& e : fs::directory_iterator("/dev", ec)) {
         if (ec) break;
-        std::string name = media::path::path_to_utf8(e.path().filename());
+        std::string name = pm::video::path_to_utf8(e.path().filename());
         if (name.size() >= 5 && name.compare(0, 5, "video") == 0)
-            out.push_back(media::path::path_to_utf8(e.path()));
+            out.push_back(pm::video::path_to_utf8(e.path()));
     }
     std::sort(out.begin(), out.end());
     return out;
@@ -301,7 +301,7 @@ std::vector<uint8_t> encode_jpeg(const VideoFrame& frame, int quality) {
 
 bool save_frame(const VideoFrame& frame, const std::string& path, std::string& err, int jpeg_quality) {
     std::string lower = path;
-    lower = media::strutil::lower_ascii(std::move(lower));
+    lower = pm::video::lower_ascii(std::move(lower));
     const bool is_jpg = lower.size() >= 4 &&
                         (lower.compare(lower.size() - 4, 4, ".jpg") == 0 ||
                          (lower.size() >= 5 && lower.compare(lower.size() - 5, 5, ".jpeg") == 0));

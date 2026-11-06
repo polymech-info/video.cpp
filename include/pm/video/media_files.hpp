@@ -1,12 +1,11 @@
 #pragma once
 
 #include <algorithm>
-#include "fs/path_sanitizer.hpp"
+#include "pm/video/text.hpp"
 #include <cstdint>
 #include <filesystem>
 #include <string>
 #include <string_view>
-#include "string/string_utils.hpp"
 
 namespace pm::video {
 
@@ -16,7 +15,7 @@ inline std::string lower_extension(std::string_view path)
     if (dot == std::string_view::npos || dot + 1 >= path.size())
         return {};
     std::string ext(path.substr(dot + 1));
-    ext = media::strutil::lower_ascii(std::move(ext));
+    ext = pm::video::lower_ascii(std::move(ext));
     return ext;
 }
 
@@ -28,8 +27,8 @@ inline bool is_still_image_path(std::string_view path)
 
 inline bool is_native_container_path(const std::filesystem::path& path)
 {
-    std::string ext = media::path::path_to_utf8(path.extension());
-    ext = media::strutil::lower_ascii(std::move(ext));
+    std::string ext = pm::video::path_to_utf8(path.extension());
+    ext = pm::video::lower_ascii(std::move(ext));
     return ext == ".mp4" || ext == ".mov";
 }
 
@@ -52,7 +51,7 @@ inline std::int64_t monotonic_media_timestamp(std::int64_t frame_ts,
 inline bool nvenc_plugin_absent(const std::string& message)
 {
     std::string m = message;
-    m = media::strutil::lower_ascii(std::move(m));
+    m = pm::video::lower_ascii(std::move(m));
     const bool mentions_nvenc = m.find("nvenc") != std::string::npos;
     const bool missing =
         m.find("not installed") != std::string::npos ||

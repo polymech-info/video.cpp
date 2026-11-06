@@ -2,13 +2,13 @@
 // Interop: vendored robmikh.common (see src/session/recorder/vendor).
 
 #include "pm/video/session_recorder.hpp"
-#include "fs/path_sanitizer.hpp"
+#include "pm/video/text.hpp"
 #include "pm/video/nvenc_loader.hpp"
 #include "pm/video/zoom.hpp"
 #include "pm/video/overlay.hpp"
 #include "pm/video/idle.hpp"
 #include "pm/video/pause.hpp"
-#include "string/string_utils.hpp"
+#include "pm/video/text.hpp"
 #if defined(FEATURE_STT) && FEATURE_STT
 #include "pm/video/captions.hpp"
 #endif
@@ -302,7 +302,7 @@ public:
         m_fps      = std::clamp(fps, 1, 240);
         m_frameDur = 10'000'000LL / static_cast<LONGLONG>(m_fps);
         m_bitrateKbps = std::clamp(bitrate_kbps, 0, 100000);
-        encoder = media::strutil::lower_ascii(std::move(encoder));
+        encoder = pm::video::lower_ascii(std::move(encoder));
         m_encoderRequest = (encoder == "nvenc" || encoder == "mediafoundation")
             ? std::move(encoder) : std::string("auto");
         m_haveAcceptedFrame = false;
@@ -313,18 +313,18 @@ public:
         m_effectiveBitrateKbps = 0;
         m_target = target;
         m_transform = transform ? *transform : VideoTransformConfig{};
-        m_transform.size_mode = media::strutil::lower_ascii(std::move(m_transform.size_mode));
+        m_transform.size_mode = pm::video::lower_ascii(std::move(m_transform.size_mode));
         if (m_transform.size_mode != "pad" &&
             m_transform.size_mode != "fit" &&
             m_transform.size_mode != "fill") {
             m_transform.size_mode = "native";
         }
-        m_transform.follow = media::strutil::lower_ascii(std::move(m_transform.follow));
+        m_transform.follow = pm::video::lower_ascii(std::move(m_transform.follow));
         if (m_transform.follow != "cursor" &&
             m_transform.follow != "anchor") {
             m_transform.follow = "none";
         }
-        m_transform.hud_capture = media::strutil::lower_ascii(std::move(m_transform.hud_capture));
+        m_transform.hud_capture = pm::video::lower_ascii(std::move(m_transform.hud_capture));
         if (m_transform.hud_capture != "visible" &&
             m_transform.hud_capture != "exclude") {
             m_transform.hud_capture = "auto";
@@ -404,7 +404,7 @@ public:
         m_loggedVidWriteFail.store(false, std::memory_order_relaxed);
         m_loggedSizeChange   = false;
         m_logFrameIndexMod30 = 0;
-        ui_log_session_video(std::string("starting capture, output: ") + media::path::path_to_utf8(out));
+        ui_log_session_video(std::string("starting capture, output: ") + pm::video::path_to_utf8(out));
         ui_log_session_video("D3D11: D3D11CreateDevice (BGRA+VIDEO, FL 11.1/11.0, HW then WARP)…");
         bool used_warp = false;
         m_d3d = create_d3d11_device_for_wgc(m_ctx, &used_warp);
@@ -762,7 +762,7 @@ public:
             m_loggedFirstFrame = true;
             ui_warn_session_video(
                 std::string("first accepted WGC frame → encode queue; output: ") +
-                media::path::path_to_utf8(m_outPath) +
+                pm::video::path_to_utf8(m_outPath) +
                 " audio=" + std::to_string(m_audio_enabled ? 1 : 0) +
                 " have_pts_t0=" + std::to_string(m_have_pts_t0 ? 1 : 0));
         }
@@ -979,7 +979,7 @@ public:
                     }
                     std::string line = "captions: STT finished - wrote";
                     for (const auto& p : written)
-                        line += " " + media::path::path_to_utf8(p);
+                        line += " " + pm::video::path_to_utf8(p);
                     ui_log_session_video(std::move(line));
                 } catch (const std::exception& ex) {
                     ui_log_session_video(
@@ -1058,7 +1058,7 @@ public:
                 ui_warn_session_video(
                     "discarded incomplete MF output (" + std::to_string(sz) +
                     " bytes, frames=" + std::to_string(frames) + "): " +
-                    media::path::path_to_utf8(m_outPath));
+                    pm::video::path_to_utf8(m_outPath));
             }
         }
         m_nvenc.reset();
@@ -1198,7 +1198,7 @@ public:
         }
         if (!update.follow.empty()) {
             std::string follow = update.follow;
-            follow = media::strutil::lower_ascii(std::move(follow));
+            follow = pm::video::lower_ascii(std::move(follow));
             if (follow != "none" && follow != "anchor" &&
                 follow != "cursor") {
                 error = "follow must be none, anchor, or cursor";

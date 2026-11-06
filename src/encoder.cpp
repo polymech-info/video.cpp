@@ -331,9 +331,10 @@ struct VideoEncoder::Impl {
     bool write(const VideoFrame& f, std::string& err) {
         if (!sink) { err = "encoder not open"; return false; }
         if (f.data.empty() || f.width <= 0 || f.height <= 0) { err = "empty frame"; return false; }
-        if ((f.format != PixelFormat::BGR24 && f.format != PixelFormat::RGB24)) {
+        if (f.format != PixelFormat::BGR24 && f.format != PixelFormat::RGB24) {
             err = "encoder requires BGR24/RGB24 frames"; return false;
         }
+        if (!rgb_frame_fits(f)) { err = "frame buffer does not cover the image"; return false; }
         if ((f.width & ~1) < w || (f.height & ~1) < h) {
             err = "frame smaller than encoder size"; return false;
         }

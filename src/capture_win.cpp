@@ -31,7 +31,7 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include "string/string_utils.hpp"
+#include "pm/video/text.hpp"
 
 using Microsoft::WRL::ComPtr;
 
@@ -638,7 +638,7 @@ static bool container_from_ext(const std::string& path,
     auto dot = path.rfind('.');
     if (dot == std::string::npos) return false;
     std::string ext = path.substr(dot + 1);
-    ext = media::strutil::lower_ascii(std::move(ext));
+    ext = pm::video::lower_ascii(std::move(ext));
 
     if (ext == "jpg" || ext == "jpeg") {
         container = GUID_ContainerFormatJpeg;
